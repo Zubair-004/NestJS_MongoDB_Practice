@@ -1,10 +1,16 @@
 import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ProductsModule } from './products/products.module';
 
 @Module({
-  imports: [ProductsModule],
+  imports: [
+    ProductsModule,
+    MongooseModule.forRoot(
+      'mongodb+srv://zubair:imnofr@cluster0.4e7bbwc.mongodb.net/Practice?retryWrites=true&w=majority',
+    ),
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
