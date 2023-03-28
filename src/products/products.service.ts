@@ -21,21 +21,26 @@ export class ProductsService {
     });
     const result = await newProduct.save();
     console.log(result);
-    return 'prodId';
+    return result.id as string;
   }
 
-  getProducts() {
-    return [...this.products];
+  async getProducts() {
+    const products = await this.productModel.find();
+    return products as Product[];
   }
 
   getSingleProduct(productId: string) {
-    const product = this.findProduct(productId)[0];
-    return { ...product };
+    const product = this.findProduct(productId);
+    return product;
   }
 
-  updateProduct(productId: string, title: string, desc: string, price: number) {
-    const [product, index] = this.findProduct(productId);
-    const updatedProduct = { ...product };
+  async updateProduct(
+    productId: string,
+    title: string,
+    desc: string,
+    price: number,
+  ) {
+    const updatedProduct = await this.findProduct(productId);
     if (title) {
       updatedProduct.title = title;
     }
@@ -45,20 +50,30 @@ export class ProductsService {
     if (price) {
       updatedProduct.price = price;
     }
-    this.products[index] = updatedProduct;
+    await this.productModel.updateOne(
+      { _id: updatedProduct.id },
+      { $set: { ...updatedProduct } },
+    );
+    return {
+      status: 'success',
+      message: 'Product updated successfully',
+    };
   }
 
-  deleteProduct(prodId: string) {
-    const index = this.findProduct(prodId)[1];
-    this.products.splice(index, 1);
+  async deleteProduct(prodId: string) {
+    await this.productModel.deleteOne({ _id: prodId });
   }
 
-  private findProduct(id: string): [Product, number] {
-    const productIndex = this.products.findIndex((prod) => prod.id === id);
-    const product = this.products[productIndex];
-    if (!product) {
+  private async findProduct(id: string): Promise<Product> {
+    let product;
+    try {
+      product = await this.productModel.findById(id);
+    } catch {
       throw new NotFoundException('Could not find product.');
     }
-    return [product, productIndex];
+    if (!product) {
+      throw new NotFoundException('Product ID is not valid.');
+    }
+    return product;
   }
 }
